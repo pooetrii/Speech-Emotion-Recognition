@@ -12,7 +12,7 @@ def ensure_model_files():
     os.makedirs("model", exist_ok=True)
 
     files = {
-        "model/best_model.h5": "17jM4JDTahLAJfUdcCrSbehs3gnJ3OpiD",
+        "model/best_model_full.h5": "17jM4JDTahLAJfUdcCrSbehs3gnJ3OpiD",
         "model/emotion_scaler.pkl": "1wGWaxlPaJ4pFfc5ZzZfwgmqn_XiH2Mjs",
         "model/emotion_encoder.pkl": "1g-Sj1QSR5neGhL9vD_-GgbmbHNw8ecsn"
     }
