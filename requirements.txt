@@ -5,8 +5,8 @@ seaborn
 matplotlib
 scikit-learn
 ipython
-keras
-tensorflow
+keras==2.12.0
+tensorflow==2.12.0
 streamlit
 sounddevice
 joblib
