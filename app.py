@@ -25,6 +25,12 @@ st.markdown("""
     text-align: center; margin-top: 30px; padding: 20px; border-radius: 15px;
     background-color: #111132; color: #ffffff; font-size: 26px; font-weight: bold;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+.plot-container {
+    background-color: #111132;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -128,15 +134,18 @@ if file_uploaded:
 
         # Waveform
         with col1:
+            st.markdown('<div class="plot-container">', unsafe_allow_html=True)
             st.markdown("### 📈 Waveform")
             fig_wave, ax_wave = plt.subplots(figsize=(6, 3))
             librosa.display.waveshow(data, sr=sr, ax=ax_wave)
             ax_wave.set_title('Waveform')
             st.pyplot(fig_wave)
             plt.close(fig_wave)
+            st.markdown('</div>', unsafe_allow_html=True)
     
         # Mel Spectrogram
         with col2:
+            st.markdown('<div class="plot-container">', unsafe_allow_html=True)
             st.markdown("### 🌈 Mel Spectrogram")
             mel_spec = librosa.feature.melspectrogram(y=data, sr=sr)
             mel_db = librosa.power_to_db(mel_spec, ref=np.max)
@@ -145,6 +154,7 @@ if file_uploaded:
             fig_mel.colorbar(img, ax=ax_mel, format='%+2.0f dB')
             st.pyplot(fig_mel)
             plt.close(fig_mel)
+            st.markdown('</div>', unsafe_allow_html=True)
     
     except Exception as e:
         st.warning(f"Tidak dapat menampilkan visualisasi audio: {e}")
