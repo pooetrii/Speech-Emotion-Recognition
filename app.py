@@ -28,7 +28,7 @@ st.markdown("""
 .plot-container {
     background-color: #111132;
     padding: 15px;
-    border-radius: 15px;
+    border-radius: 20px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
     margin-bottom: 20px;
 }
