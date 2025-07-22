@@ -16,13 +16,6 @@ def make_rounded_plot(fig, radius=30):
     fig.savefig(buf, format="png", bbox_inches='tight', facecolor=fig.get_facecolor())
     buf.seek(0)
     image = Image.open(buf).convert("RGBA")
-
-    # Buat masker bulat
-    rounded = Image.new("L", image.size, 0)
-    draw = ImageDraw.Draw(rounded)
-    draw.rounded_rectangle((0, 0, image.size[0], image.size[1]), radius=radius, fill=255)
-
-    image.putalpha(rounded)
     return image
     
 # Load scaler, encoder, dan model
