@@ -135,8 +135,10 @@ if file_uploaded:
             ax_wave.set_xlabel('Waktu')
             ax_wave.set_ylabel('Amplitudo')
             st.pyplot(fig_wave)
+            plt.close(fig_wave)
 
-        # Mel Spectrogram (ganti MFCC)
+
+        # Mel Spectrogram
         with col2:
             st.markdown("### 🌈 Mel Spectrogram")
             mel_spec = librosa.feature.melspectrogram(y=data, sr=sr, n_fft=2048, hop_length=512)
@@ -146,6 +148,7 @@ if file_uploaded:
             ax_mel.set_title('Mel Spectrogram')
             fig_mel.colorbar(img, ax=ax_mel, format='%+2.0f dB')
             st.pyplot(fig_mel)
+            plt.close(fig_mel)
 
     except:
         st.warning("Tidak dapat menampilkan visualisasi audio.")
