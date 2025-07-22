@@ -123,9 +123,9 @@ if file_uploaded:
         f.write(file_uploaded.read())
 
     try:
-    data, sr = librosa.load(AUDIO_FILE, sr=None)
-    st.write(f"Audio shape: {data.shape}, Sample rate: {sr}")
-    col1, col2 = st.columns(2)
+        data, sr = librosa.load(AUDIO_FILE, sr=None)
+        st.write(f"Audio shape: {data.shape}, Sample rate: {sr}")
+        col1, col2 = st.columns(2)
 
     # Waveform
     with col1:
