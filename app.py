@@ -6,9 +6,25 @@ from download_utils import ensure_model_files
 from tensorflow.keras.models import load_model
 import librosa.display
 import matplotlib.pyplot as plt
+import io
+from PIL import Image, ImageDraw
+from matplotlib import gridspec
 
 ensure_model_files()
+def make_rounded_plot(fig, radius=30):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches='tight', facecolor=fig.get_facecolor())
+    buf.seek(0)
+    image = Image.open(buf).convert("RGBA")
 
+    # Buat masker bulat
+    rounded = Image.new("L", image.size, 0)
+    draw = ImageDraw.Draw(rounded)
+    draw.rounded_rectangle((0, 0, image.size[0], image.size[1]), radius=radius, fill=255)
+
+    image.putalpha(rounded)
+    return image
+    
 # Load scaler, encoder, dan model
 scaler = load('model/emotion_scaler.pkl')
 encoder = load('model/emotion_encoder.pkl')
@@ -25,12 +41,6 @@ st.markdown("""
     text-align: center; margin-top: 30px; padding: 20px; border-radius: 15px;
     background-color: #111132; color: #ffffff; font-size: 26px; font-weight: bold;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-.plot-container {
-    background-color: #111132;
-    padding: 15px;
-    border-radius: 20px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-    margin-bottom: 20px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -134,27 +144,40 @@ if file_uploaded:
 
         # Waveform
         with col1:
-            st.markdown('<div class="plot-container">', unsafe_allow_html=True)
             st.markdown("### 📈 Waveform")
             fig_wave, ax_wave = plt.subplots(figsize=(6, 3))
+            fig_wave.patch.set_facecolor('#111132')
+            ax_wave.set_facecolor('#111132')
             librosa.display.waveshow(data, sr=sr, ax=ax_wave)
-            ax_wave.set_title('Waveform')
-            st.pyplot(fig_wave)
+            ax_wave.set_xlabel('Time', color='white')     
+            ax_wave.set_ylabel('Amplitudo', color='white')    
+            ax_wave.tick_params(colors='white')               
+            rounded_wave = make_rounded_plot(fig_wave)
+            st.image(rounded_wave)
             plt.close(fig_wave)
-            st.markdown('</div>', unsafe_allow_html=True)
     
         # Mel Spectrogram
         with col2:
-            st.markdown('<div class="plot-container">', unsafe_allow_html=True)
             st.markdown("### 🌈 Mel Spectrogram")
+            fig_mel = plt.figure(figsize=(6,3.3))
+            fig_mel.patch.set_facecolor('#111132')
+            # Gunakan gridspec agar colorbar tidak ganggu layout utama
+            gs = gridspec.GridSpec(1, 2, width_ratios=[20, 1], wspace=0.1)
+            ax_mel = fig_mel.add_subplot(gs[0])
+            cb_ax = fig_mel.add_subplot(gs[1])
+            ax_mel.set_facecolor('#111132')
             mel_spec = librosa.feature.melspectrogram(y=data, sr=sr)
             mel_db = librosa.power_to_db(mel_spec, ref=np.max)
-            fig_mel, ax_mel = plt.subplots(figsize=(6, 3))
             img = librosa.display.specshow(mel_db, x_axis='time', y_axis='mel', sr=sr, ax=ax_mel, cmap='magma')
-            fig_mel.colorbar(img, ax=ax_mel, format='%+2.0f dB')
-            st.pyplot(fig_mel)
+            fig_mel.colorbar(img, cax=cb_ax, format='%+2.0f dB')
+            ax_mel.set_xlabel('Time', color='white')         
+            ax_mel.set_ylabel('Hz', color='white') 
+            ax_mel.tick_params(colors='white')
+            cb_ax.tick_params(colors='white')
+            cb_ax.yaxis.set_tick_params(labelsize=8)
+            rounded_mel = make_rounded_plot(fig_mel)
+            st.image(rounded_mel)
             plt.close(fig_mel)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     except Exception as e:
         st.warning(f"Tidak dapat menampilkan visualisasi audio: {e}")
