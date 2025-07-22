@@ -123,35 +123,32 @@ if file_uploaded:
         f.write(file_uploaded.read())
 
     try:
-        data, sr = librosa.load(AUDIO_FILE)
-        col1, col2 = st.columns(2)
+    data, sr = librosa.load(AUDIO_FILE, sr=None)
+    st.write(f"Audio shape: {data.shape}, Sample rate: {sr}")
+    col1, col2 = st.columns(2)
 
-        # Waveform
-        with col1:
-            st.markdown("### 📈 Waveform")
-            fig_wave, ax_wave = plt.subplots(figsize=(6, 3))
-            librosa.display.waveshow(data, sr=sr, ax=ax_wave)
-            ax_wave.set_title('Waveform')
-            ax_wave.set_xlabel('Waktu')
-            ax_wave.set_ylabel('Amplitudo')
-            st.pyplot(fig_wave)
-            plt.close(fig_wave)
+    # Waveform
+    with col1:
+        st.markdown("### 📈 Waveform")
+        fig_wave, ax_wave = plt.subplots(figsize=(6, 3))
+        librosa.display.waveshow(data, sr=sr, ax=ax_wave)
+        ax_wave.set_title('Waveform')
+        st.pyplot(fig_wave)
+        plt.close(fig_wave)
 
+    # Mel Spectrogram
+    with col2:
+        st.markdown("### 🌈 Mel Spectrogram")
+        mel_spec = librosa.feature.melspectrogram(y=data, sr=sr)
+        mel_db = librosa.power_to_db(mel_spec, ref=np.max)
+        fig_mel, ax_mel = plt.subplots(figsize=(6, 3))
+        img = librosa.display.specshow(mel_db, x_axis='time', y_axis='mel', sr=sr, ax=ax_mel, cmap='magma')
+        fig_mel.colorbar(img, ax=ax_mel, format='%+2.0f dB')
+        st.pyplot(fig_mel)
+        plt.close(fig_mel)
 
-        # Mel Spectrogram
-        with col2:
-            st.markdown("### 🌈 Mel Spectrogram")
-            mel_spec = librosa.feature.melspectrogram(y=data, sr=sr, n_fft=2048, hop_length=512)
-            mel_db = librosa.power_to_db(mel_spec, ref=np.max)
-            fig_mel, ax_mel = plt.subplots(figsize=(6, 3))
-            img = librosa.display.specshow(mel_db, x_axis='time', y_axis='mel', sr=sr, hop_length=512, ax=ax_mel, cmap='magma')
-            ax_mel.set_title('Mel Spectrogram')
-            fig_mel.colorbar(img, ax=ax_mel, format='%+2.0f dB')
-            st.pyplot(fig_mel)
-            plt.close(fig_mel)
-
-    except:
-        st.warning("Tidak dapat menampilkan visualisasi audio.")
+except Exception as e:
+    st.warning(f"Tidak dapat menampilkan visualisasi audio: {e}")
 
     if st.button("🔍 Mulai Prediksi"):
         emotion, _ = emotion_classifier(AUDIO_FILE)
