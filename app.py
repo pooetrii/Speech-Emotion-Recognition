@@ -19,9 +19,9 @@ def make_rounded_plot(fig, radius=30):
     return image
     
 # Load scaler, encoder, dan model
-scaler = load('model/emotion_scaler.pkl')
-encoder = load('model/emotion_encoder.pkl')
-model = load_model('model/best_model_full.h5')
+scaler = load('model/emotion_scalersplitrndm.pkl')
+encoder = load('model/emotion_encodersplitrndm.pkl')
+model = load_model('model/splitnonsmoterndm.h5')
 
 EXPECTED_FEATURE_LENGTH = 9288
 AUDIO_FILE = 'temp_audio.wav'
