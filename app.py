@@ -23,7 +23,7 @@ scaler = load('model/emotion_scaler.pkl')
 encoder = load('model/emotion_encoder.pkl')
 model = load_model('model/best_model_full.h5')
 
-EXPECTED_FEATURE_LENGTH = 15444
+EXPECTED_FEATURE_LENGTH = 9288
 AUDIO_FILE = 'temp_audio.wav'
 
 # Styling
@@ -55,12 +55,17 @@ class FeatureExtractor:
     def rmse(self, data):
         return librosa.feature.rms(y=data, frame_length=self.frame_length, hop_length=self.hop_length).flatten()
 
-    def mfcc(self, data, sr, n_mfcc=13):
-        return librosa.feature.mfcc(y=data, sr=sr, n_mfcc=n_mfcc, hop_length=self.hop_length).T.flatten()
+    def mfcc(self, data, sr, n_mfcc=13, flatten=True):
+        mfcc_features = librosa.feature.mfcc(
+            y=data, sr=sr, n_mfcc=n_mfcc, hop_length=self.hop_length
+        )
+        return mfcc_features.T.flatten() if flatten else mfcc_features.T
 
-    def mel_spectrogram(self, data, sr):
-        mel = librosa.feature.melspectrogram(y=data, sr=sr, hop_length=self.hop_length)
-        return librosa.power_to_db(mel).flatten()
+    def mel_spectrogram(self, data, sr, n_mels=64):
+        mel_features = librosa.feature.melspectrogram(
+            y=data, sr=sr, n_mels=n_mels, hop_length=self.hop_length
+        )
+        return librosa.power_to_db(mel_features).flatten()
 
     def extract_features(self, data, sr):
         return np.concatenate([
@@ -70,12 +75,14 @@ class FeatureExtractor:
 
 class DataAugmentation:
     @staticmethod
-    def noise(data, noise_factor=0.005):
-        noise_amp = noise_factor * np.random.uniform() * np.amax(data)
+    def noise(data, noise_min=0.01, noise_max=0.07):
+        noise_factor = np.random.uniform(noise_min, noise_max)
+        noise_amp = noise_factor * np.amax(data)
         return data + noise_amp * np.random.normal(size=data.shape[0])
 
     @staticmethod
-    def pitch(data, sr, n_steps=4):
+    def pitch(data, sr, min_steps=-2, max_steps=2):
+        n_steps = np.random.randint(min_steps, max_steps + 1)
         return librosa.effects.pitch_shift(y=data, sr=sr, n_steps=n_steps)
 
 class AudioProcessor:
@@ -83,41 +90,27 @@ class AudioProcessor:
         self.extractor = FeatureExtractor()
         self.augmenter = DataAugmentation()
 
+    def pad_or_trim(self, feat):
+        if len(feat) < EXPECTED_FEATURE_LENGTH:
+            return np.pad(feat, (0, EXPECTED_FEATURE_LENGTH - len(feat)), 'constant')
+        elif len(feat) > EXPECTED_FEATURE_LENGTH:
+            return feat[:EXPECTED_FEATURE_LENGTH]
+        return feat
+
     def get_features(self, path):
-        try:
-            data, sr = librosa.load(path, duration=2.5, offset=0.6)
-        except:
-            return []
-        features = [self.extractor.extract_features(data, sr)]
-        features.append(self.extractor.extract_features(self.augmenter.noise(data), sr))
-        pitched = self.augmenter.pitch(data, sr)
-        features.append(self.extractor.extract_features(pitched, sr))
-        features.append(self.extractor.extract_features(self.augmenter.noise(pitched), sr))
-        return np.array(features)
+        data, sr = librosa.load(path, sr=22050)
+        f = self.extractor.extract_features(data, sr)
+        f = self.pad_or_trim(f)
+        return np.array([f])
 
 def emotion_classifier(file_path):
     processor = AudioProcessor()
-    X = processor.get_features(file_path)
-    
-    if len(X) == 0:
-        return None, None
+    X = processor.get_features(file_path)              # shape: (1, 9288)
 
-    if X.shape[1] < EXPECTED_FEATURE_LENGTH:
-        X = np.pad(X, ((0, 0), (0, EXPECTED_FEATURE_LENGTH - X.shape[1])), mode='constant')
-    elif X.shape[1] > EXPECTED_FEATURE_LENGTH:
-        X = X[:, :EXPECTED_FEATURE_LENGTH]
-
-    X_scaled = scaler.transform(X).reshape((X.shape[0], X.shape[1], 1))
-    predictions = model.predict(X_scaled)
-
-    predicted_indices = np.argmax(predictions, axis=1)
-    final_index = np.bincount(predicted_indices).argmax()
-
-    # one-hot vector untuk inverse_transform
-    one_hot = np.zeros((1, len(encoder.categories_[0])))
-    one_hot[0, final_index] = 1
-
-    predicted_label = encoder.inverse_transform(one_hot)[0][0]
+    X_scaled = scaler.transform(X)
+    X_final = np.expand_dims(X_scaled, axis=2)
+    predictions = model.predict(X_final)
+    predicted_label = encoder.inverse_transform(predictions)[0][0]
     return predicted_label, predictions[0]
 
 # ========== UI ==========
@@ -182,3 +175,13 @@ if file_uploaded:
             st.markdown(f'<div class="emotion-output">Prediksi Emosi: {emotion} {emoji}</div>', unsafe_allow_html=True)
         else:
             st.error("❌ Gagal memprediksi emosi.")
+
+        # Tampilkan 3 probabilitas teratas (dari baris prediksi tunggal)
+        top_indices = predictions.argsort()[-3:][::-1]
+        top_labels = [encoder.categories_[0][i] for i in top_indices]
+        top_probs = [predictions[i] for i in top_indices]
+        df_top = pd.DataFrame({
+            "Emosi": top_labels,
+            "Probabilitas": [f"{p:.3f}" for p in top_probs]
+        })
+        st.table(df_top)
