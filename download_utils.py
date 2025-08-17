@@ -12,9 +12,9 @@ def ensure_model_files():
     os.makedirs("model", exist_ok=True)
 
     files = {
-        "model/best_model_full.h5": "17jM4JDTahLAJfUdcCrSbehs3gnJ3OpiD",
-        "model/emotion_scaler.pkl": "1wGWaxlPaJ4pFfc5ZzZfwgmqn_XiH2Mjs",
-        "model/emotion_encoder.pkl": "1g-Sj1QSR5neGhL9vD_-GgbmbHNw8ecsn"
+        "model/splitnonsmoterndm.h5": "1a-BMLMgQSVNTAN94YrNTVtFJKFajNuNQ",
+        "model/emotion_scalersplitrndm.pkl": "1GNFyZD2kVQyswNFPNxuGRj3lCH-dcSz2",
+        "model/emotion_encodersplitrndm.pkl": "1qwZuRihB-LDWx9yWY0hqheHFrNo30xTI"
     }
 
     for path, file_id in files.items():
