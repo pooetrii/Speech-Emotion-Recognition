@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 import librosa
 from joblib import load
 from download_utils import ensure_model_files
