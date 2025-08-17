@@ -169,7 +169,7 @@ if file_uploaded:
         st.warning(f"Tidak dapat menampilkan visualisasi audio: {e}")
 
     if st.button("🔍 Mulai Prediksi"):
-        emotion, _ = emotion_classifier(AUDIO_FILE)
+        emotion, predictions = emotion_classifier(AUDIO_FILE)
         if emotion:
             emoji = emotion_emoji_dict.get(emotion, "🎧")
             st.markdown(f'<div class="emotion-output">Prediksi Emosi: {emotion} {emoji}</div>', unsafe_allow_html=True)
